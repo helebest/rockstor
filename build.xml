@@ -88,6 +88,7 @@
         <jar destfile="${build.jar.sdk}">
             <fileset dir="${build.classes}">
                 <include name="com/rockstor/client/*.class"/>
+            	<include name="com/rockontrol/client/*.class"/>
             </fileset>
         </jar>
 

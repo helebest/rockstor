@@ -50,11 +50,11 @@ public class FileOperation {
       PathPair p = null;
       Matcher matcher = pattern.matcher(remotePath);
       String bucketname = null;
-      String FilePath = null;
+      String filePath = null;
       if (matcher.find()) {
          bucketname = matcher.group(1);
-         FilePath = matcher.group(2);
-         p = new PathPair(bucketname, FilePath);
+         filePath = matcher.group(2);
+         p = new PathPair(bucketname, filePath);
       }
 
       if (p == null)

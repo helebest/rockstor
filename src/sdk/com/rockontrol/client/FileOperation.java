@@ -18,6 +18,8 @@ import com.rockstor.client.RockStorException;
 
 public class FileOperation {
 
+   private static final Pattern pattern = Pattern.compile("^/(\\S+?)/(.+)");
+
    private RockStor rs = null;
 
    private static class PathPair {
@@ -32,8 +34,11 @@ public class FileOperation {
 
    /**
     * FileOperation constructor
-    * @param address: rockstor servers's ip:port
-    * @param username: login user name
+    * 
+    * @param address
+    *           : rockstor servers's ip:port
+    * @param username
+    *           : login user name
     * @throws RockStorException
     */
    public FileOperation(String address, String username) throws RockStorException {
@@ -43,7 +48,6 @@ public class FileOperation {
    // parser target directory
    private PathPair parser(String remotePath) {
       PathPair p = null;
-      Pattern pattern = Pattern.compile("^/(\\S+?)/(.+)");
       Matcher matcher = pattern.matcher(remotePath);
       String bucketname = null;
       String FilePath = null;
@@ -52,10 +56,10 @@ public class FileOperation {
          FilePath = matcher.group(2);
          p = new PathPair(bucketname, FilePath);
       }
-      
-      if(p == null) 
+
+      if (p == null)
          throw new IllegalArgumentException("cannot parse path=" + remotePath);
-      
+
       return p;
    }
 
@@ -82,9 +86,9 @@ public class FileOperation {
       ListBucketResult r2 = rs.getBucket(bucketName);
       ArrayList<Contents> contents = r2.getContents();
       if (contents != null) {
-         String FullFilePath = "/" + filePath;
+         String fullFilePath = "/" + filePath;
          for (int i = 0; i < contents.size(); i++) {
-            if (contents.get(i).getKey().equals(FullFilePath)) {
+            if (contents.get(i).getKey().equals(fullFilePath)) {
                contain = true;
                break;
             }
@@ -95,8 +99,11 @@ public class FileOperation {
 
    /**
     * upload local file to remote rockstor server
-    * @param localPath local full path you want to upload
-    * @param remotePath specified remote full path at rockstor server
+    * 
+    * @param localPath
+    *           local full path you want to upload
+    * @param remotePath
+    *           specified remote full path at rockstor server
     * @throws RockStorException
     * @throws IOException
     */
@@ -114,11 +121,17 @@ public class FileOperation {
          if (containFile(filePath, bucketname)) {
             throw new IOException("FilePath = " + filePath + " already exists!");
          } else {
-            File testFile = new File(localPath);
-            FileInputStream fis = new FileInputStream(testFile);
-            rs.putObject(bucketname, filePath, null, null, null,
-                  (int) testFile.length(), fis);
-            fis.close();
+            FileInputStream fis = null;
+            try {
+               File testFile = new File(localPath);
+               fis = new FileInputStream(testFile);
+               rs.putObject(bucketname, filePath, null, null, null, (int) testFile
+                     .length(), fis);
+            } finally {
+               if (fis != null) {
+                  fis.close();
+               }
+            }
          }
 
       } else {
@@ -128,15 +141,17 @@ public class FileOperation {
 
    /**
     * delete file at rockstor server
-    * @param remotePath remote full path at rockstor server
+    * 
+    * @param remotePath
+    *           remote full path at rockstor server
     * @throws RockStorException
     */
    public void deleteFile(String remotePath) throws RockStorException {
       PathPair p = parser(remotePath);
       String bucketname = p.bucketName;
-      String FilePath = p.filePath;
-      if (bucketname != null && FilePath != null) {
-         rs.deleteObject(bucketname, FilePath);
+      String filePath = p.filePath;
+      if (bucketname != null && filePath != null) {
+         rs.deleteObject(bucketname, filePath);
       } else {
          throw new IllegalArgumentException("illegal path=" + remotePath);
       }
@@ -144,7 +159,9 @@ public class FileOperation {
 
    /**
     * delete bucket at rockstor server
-    * @param bucketname bucket is the first directory entry of the path at rockstor
+    * 
+    * @param bucketname
+    *           bucket is the first directory entry of the path at rockstor
     * @throws RockStorException
     * @throws IOException
     */
@@ -158,8 +175,11 @@ public class FileOperation {
 
    /**
     * get remote file at rockstor
-    * @param remotePath file's remote file path at rockstor
-    * @param localPath specified local full path
+    * 
+    * @param remotePath
+    *           file's remote file path at rockstor
+    * @param localPath
+    *           specified local full path
     * @throws RockStorException
     * @throws IOException
     */
@@ -174,7 +194,7 @@ public class FileOperation {
          FileOutputStream fos = new FileOutputStream(new File(localPath));
          byte[] buf = new byte[4096];
          int len = 0;
-         while ((len = is.read(buf)) > 0) {
+         while ((len = is.read(buf)) > -1) {
             fos.write(buf, 0, len);
          }
          fos.close();
